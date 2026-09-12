@@ -13,6 +13,7 @@ and a mini SOC with an adaptive feedback loop.
 [![Docker Compose](https://img.shields.io/badge/docker-compose-2496ED)](https://docs.docker.com/compose/)
 [![TensorFlow 2.x](https://img.shields.io/badge/tensorflow-2.x-orange)](https://www.tensorflow.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
+[![CI](https://github.com/thanhsang1404/sqli-detection-waf/actions/workflows/ci.yml/badge.svg)](https://github.com/thanhsang1404/sqli-detection-waf/actions/workflows/ci.yml)
 
 ---
 
