@@ -1,0 +1,66 @@
+# ========================
+# Python
+# ========================
+__pycache__/
+services/*/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv-sqli/
+venv/
+.venv/
+env/
+
+# ========================
+# Environment
+# ========================
+.env
+# (giữ .env.example để người khác biết cần set gì)
+
+# ========================
+# Model files (quá lớn cho GitHub — dùng Git LFS hoặc link download)
+# ========================
+models/*.keras
+models/*.h5
+models/*.pb
+models/*.pkl
+models/predictions.csv
+models/export/
+models/exported/
+models/multi_runs/
+models/saved_model/
+
+# ========================
+# Data & Logs
+# ========================
+data/mysql/
+data/waf_logs/
+data/mock_logs/
+data/alerts.db
+services/soc/data/
+*.log
+*.bak
+
+# ========================
+# Dataset trung gian (chỉ giữ file cuối)
+# ========================
+dataset/train_augmented*.csv
+dataset/train_final.csv
+dataset/overlap_*.txt
+dataset/predictions*.csv
+dataset/test_dataset_1_csv.bak
+
+# ========================
+# macOS
+# ========================
+.DS_Store
+.DS_Store?
+._*
+
+# ========================
+# IDE
+# ========================
+.vscode/settings.json
+.idea/
+*.swp

@@ -1,0 +1,6 @@
+query,label
+"SELECT * FROM users",benign
+"1 OR 1=1",sqli
+"' OR '1'='1",sqli
+"INSERT INTO users VALUES ('admin','123')",benign
+"DROP TABLE users",sqli

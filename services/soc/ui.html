@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>SENTRY — SOC Monitor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --void:#0a0e13;
+  --panel:#111820;
+  --panel-2:#161f29;
+  --line:#22303e;
+  --text:#dbe4ee;
+  --text-dim:#7c8a9a;
+  --accent:#5eead4;
+  --accent-dim:#0f3d38;
+  --crit:#fb7185;
+  --crit-dim:#3a1420;
+  --warn:#fbbf24;
+  --warn-dim:#3a2c0a;
+  --safe:#34d399;
+  --safe-dim:#0e3327;
+  --mono:'IBM Plex Mono', ui-monospace, monospace;
+  --sans:'IBM Plex Sans', system-ui, sans-serif;
+}
+*{ box-sizing:border-box; }
+body {
+  font-family: var(--sans);
+  background:
+    radial-gradient(ellipse 900px 500px at 50% -10%, rgba(94,234,212,0.07), transparent),
+    var(--void);
+  color: var(--text);
+  margin: 0;
+  min-height:100vh;
+}
+a{ color:var(--accent); text-decoration:none; }
+
+.topbar{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 28px; border-bottom:1px solid var(--line);
+  background:rgba(10,14,19,0.85); backdrop-filter:blur(6px);
+  position:sticky; top:0; z-index:10;
+}
+.brand{ display:flex; align-items:center; gap:10px; font-family:var(--mono); }
+.brand-mark{ width:10px; height:10px; border-radius:2px; background:var(--accent); box-shadow:0 0 10px var(--accent); }
+.brand-name{ font-weight:700; letter-spacing:0.02em; }
+.brand-sub{ color:var(--text-dim); font-size:13px; }
+.nav-links{ display:flex; gap:18px; font-family:var(--mono); font-size:13px; }
+.nav-links a:hover{ text-decoration:underline; }
+
+.hero{ max-width:1080px; margin:0 auto; padding:36px 20px 4px; }
+.hero h1{ font-size:28px; margin:0 0 6px; font-weight:700; letter-spacing:-0.01em; }
+.hero p{ margin:0; color:var(--text-dim); font-size:14.5px; line-height:1.6; }
+
+.wrap{ max-width: 1080px; margin: 0 auto; padding: 20px 20px 60px; }
+
+.stat-grid{
+  display:grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap:12px;
+  margin-bottom:16px;
+}
+@media (max-width:760px){ .stat-grid{ grid-template-columns: repeat(2,1fr); } }
+.stat-tile{
+  background:var(--panel); border:1px solid var(--line); border-radius:10px;
+  padding:16px 18px;
+}
+.stat-tile .label{ font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-dim); margin-bottom:8px; }
+.stat-tile .value{ font-family:var(--mono); font-size:26px; font-weight:600; }
+.stat-tile.total .value{ color:var(--text); }
+.stat-tile.blocked .value{ color:var(--crit); }
+.stat-tile.allowed .value{ color:var(--safe); }
+.stat-tile.correct .value{ color:var(--accent); }
+.stat-tile.wrong .value{ color:var(--warn); }
+
+.card {
+  background: var(--panel);
+  padding: 20px;
+  margin-bottom: 20px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+}
+.card h2{
+  font-size:13px; text-transform:uppercase; letter-spacing:0.06em;
+  color:var(--text-dim); margin:0 0 14px; font-weight:600;
+  display:flex; align-items:center; gap:8px;
+}
+.card h2 .dot{ width:6px; height:6px; border-radius:50%; background:var(--accent); }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--mono);
+  font-size: 12.5px;
+}
+
+th, td {
+  padding: 10px 10px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+}
+
+th {
+  color: var(--text-dim);
+  font-weight:500; text-transform:uppercase; font-size:11px; letter-spacing:0.04em;
+}
+tbody tr:hover{ background:var(--panel-2); }
+
+.badge {
+  padding: 4px 9px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--mono);
+}
+
+.block {
+  background: var(--crit-dim);
+  color: var(--crit);
+  border:1px solid rgba(251,113,133,.35);
+}
+
+.allow {
+  background: var(--safe-dim);
+  color: var(--safe);
+  border:1px solid rgba(52,211,153,.35);
+}
+
+.btn {
+  padding: 5px 9px;
+  margin-right: 5px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: var(--mono);
+  font-weight:600;
+}
+
+.btn-ok {
+  background: var(--safe-dim);
+  color: var(--safe);
+  border:1px solid rgba(52,211,153,.35);
+}
+.btn-ok:hover{ background:var(--safe); color:#04201c; }
+
+.btn-bad {
+  background: var(--crit-dim);
+  color: var(--crit);
+  border:1px solid rgba(251,113,133,.4);
+}
+.btn-bad:hover{ background:var(--crit); color:#2c0410; }
+
+.empty-note{ color:var(--text-dim); font-family:var(--mono); font-size:12.5px; padding:6px 2px; }
+
+</style>
+</head>
+
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-mark"></div>
+    <span class="brand-name">SENTRY</span>
+    <span class="brand-sub">/ soc-monitor</span>
+  </div>
+  <div class="nav-links">
+    <a href="http://localhost:8000">Target App</a>
+    <span style="color:var(--text-dim)">·</span>
+    <a href="http://localhost:5110/demo">Detection Engine</a>
+  </div>
+</div>
+
+<div class="hero">
+  <h1>SOC Monitor</h1>
+  <p>Toàn bộ event từ WAF đổ về đây theo thời gian thực. Gắn feedback ✔/✖ trên từng alert để cập nhật threshold qua vòng phản hồi RL.</p>
+</div>
+
+<div class="wrap">
+
+  <div class="stat-grid" id="statGrid">
+    <div class="stat-tile total"><div class="label">Total</div><div class="value" id="s-total">—</div></div>
+    <div class="stat-tile blocked"><div class="label">Blocked</div><div class="value" id="s-blocked">—</div></div>
+    <div class="stat-tile allowed"><div class="label">Allowed</div><div class="value" id="s-allowed">—</div></div>
+    <div class="stat-tile correct"><div class="label">Feedback ok</div><div class="value" id="s-correct">—</div></div>
+    <div class="stat-tile wrong"><div class="label">Feedback wrong</div><div class="value" id="s-wrong">—</div></div>
+  </div>
+
+  <div class="card">
+    <h2><span class="dot"></span>Alerts</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Time</th>
+          <th>IP</th>
+          <th>Query</th>
+          <th>Decision</th>
+          <th>Risk</th>
+          <th>Reason</th>
+          <th>Feedback</th>
+        </tr>
+      </thead>
+      <tbody id="alerts"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+async function loadStats() {
+  const res = await fetch("/stats");
+  const data = await res.json();
+
+  document.getElementById("s-total").textContent = data.total;
+  document.getElementById("s-blocked").textContent = data.blocked;
+  document.getElementById("s-allowed").textContent = data.allowed;
+  document.getElementById("s-correct").textContent = data.feedback_correct || 0;
+  document.getElementById("s-wrong").textContent = data.feedback_wrong || 0;
+}
+
+function riskColor(score) {
+  if (score > 80) return "#fb7185";
+  if (score > 50) return "#fbbf24";
+  return "#34d399";
+}
+
+async function sendFeedback(id, correct) {
+  await fetch(`/feedback?alert_id=${id}&correct=${correct}`, {
+    method: "POST"
+  });
+
+  loadAll();
+}
+
+async function loadAlerts() {
+  const res = await fetch("/alerts");
+  const data = await res.json();
+
+  if (!data.items || data.items.length === 0) {
+    document.getElementById("alerts").innerHTML =
+      `<tr><td colspan="7" class="empty-note">Chưa có alert nào — gửi vài payload SQLi từ Target App hoặc Detection Engine để thấy dữ liệu ở đây.</td></tr>`;
+    return;
+  }
+
+  const rows = data.items.map(a => `
+    <tr>
+      <td>${new Date(a.ts).toLocaleString()}</td>
+      <td>${a.src_ip}</td>
+      <td>${a.query}</td>
+      <td>
+        <span class="badge ${a.decision === 'BLOCK' ? 'block' : 'allow'}">
+          ${a.decision}
+        </span>
+      </td>
+      <td style="color:${riskColor(a.risk_score)}; font-weight:700">
+        ${a.risk_score}
+      </td>
+      <td>${a.reasons || "-"}</td>
+      <td>
+        <button class="btn btn-ok" onclick="sendFeedback(${a.id}, true)">✔</button>
+        <button class="btn btn-bad" onclick="sendFeedback(${a.id}, false)">✖</button>
+      </td>
+    </tr>
+  `).join("");
+
+  document.getElementById("alerts").innerHTML = rows;
+}
+
+async function loadAll() {
+  await loadStats();
+  await loadAlerts();
+}
+
+loadAll();
+//setInterval(loadAll, 3000);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,128 @@
+# docker-compose.yml — đã fix:
+#   - Bỏ dòng version (obsolete)
+#   - Dùng .env thay vì hardcode password
+#   - Thêm healthcheck cho db
+#   - web depends_on db với condition healthy
+
+services:
+
+  # -------------------------
+  # Mock TF-Serving
+  # -------------------------
+  mock_tfserving:
+    image: python:3.10-slim
+    container_name: mock_tfserving
+    working_dir: /app
+    environment:
+      - LOG_DIR=/app/logs
+    volumes:
+      - ./services/mock_tfserving/mock_tfserving.py:/app/mock_tfserving.py:ro
+      - ./data/mock_logs:/app/logs
+    command: >
+      sh -c "pip install --no-cache-dir fastapi uvicorn numpy &&
+             python -c 'import os; os.makedirs(os.getenv(\"LOG_DIR\",\"/app/logs\"), exist_ok=True)' &&
+             uvicorn mock_tfserving:app --host 0.0.0.0 --port 8501"
+    ports:
+      - "8501:8501"
+    restart: unless-stopped
+    platform: linux/arm64
+
+  # -------------------------
+  # MySQL Database
+  # -------------------------
+  db:
+    image: mysql:8
+    container_name: mysql_db
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./data/mysql:/var/lib/mysql
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    platform: linux/arm64
+
+  # -------------------------
+  # MiniSOC
+  # -------------------------
+  soc:
+    image: python:3.10-slim
+    container_name: soc
+    working_dir: /app
+    volumes:
+      - ./services/soc:/app
+      - ./data:/app/data
+    command: >
+      sh -c "pip install fastapi uvicorn requests &&
+             uvicorn app:app --host 0.0.0.0 --port 5210"
+    ports:
+      - "5210:5210"
+    restart: unless-stopped
+    platform: linux/arm64
+
+  # -------------------------
+  # WAF
+  # -------------------------
+  waf:
+    build:
+      context: .
+      dockerfile: services/waf/Dockerfile.waf
+    container_name: waf
+    depends_on:
+      - mock_tfserving
+      - soc
+    ports:
+      - "5110:5110"
+    environment:
+      TF_SERVING_HOST: mock_tfserving
+      TF_SERVING_PORT: "8501"
+      TF_MODEL_NAME: ${TF_MODEL_NAME:-sqli}
+      THRESHOLD: ${THRESHOLD:-0.9}
+      MAXLEN: ${MAXLEN:-50}
+      TOKENIZER_PATH: "models/tokenizer_vocab.json"
+      WAF_LOG_PATH: "/app/logs/waf_blocked.log"
+      SOC_ENABLED: ${SOC_ENABLED:-1}
+    volumes:
+      - ./models/:/app/models:ro
+      - ./services/waf/waf_tfserving.py:/app/waf_tfserving.py:ro
+      - ./services/waf/index.html:/app/index.html:ro
+      - ./data/waf_logs:/app/logs
+    restart: unless-stopped
+    platform: linux/arm64
+
+  # -------------------------
+  # Web App
+  # -------------------------
+  web:
+    image: python:3.10-slim
+    container_name: web
+    working_dir: /app
+    depends_on:
+      db:
+        condition: service_healthy
+      waf:
+        condition: service_started
+    volumes:
+      - ./services/web/web_app.py:/app/web_app.py
+      - ./services/web/web.html:/app/web.html
+    command: >
+      sh -c "pip install fastapi uvicorn requests python-multipart pymysql &&
+             uvicorn web_app:app --host 0.0.0.0 --port 8000"
+    ports:
+      - "8000:8000"
+    environment:
+      DB_HOST: db
+      DB_USER: ${MYSQL_USER}
+      DB_PASSWORD: ${MYSQL_PASSWORD}
+      DB_NAME: ${MYSQL_DATABASE}
+    restart: unless-stopped
+    platform: linux/arm64

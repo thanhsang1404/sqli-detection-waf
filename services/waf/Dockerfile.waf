@@ -1,0 +1,13 @@
+FROM python:3.10-slim
+WORKDIR /app
+
+COPY services/waf/waf_tfserving.py /app/
+COPY services/waf/explain_utils.py /app/
+COPY services/waf/index.html /app/
+COPY models/ /app/models/
+
+RUN pip install --no-cache-dir --upgrade pip \
+ && pip install --no-cache-dir fastapi uvicorn requests numpy
+
+EXPOSE 5110
+CMD ["uvicorn", "waf_tfserving:app", "--host", "0.0.0.0", "--port", "5110"]

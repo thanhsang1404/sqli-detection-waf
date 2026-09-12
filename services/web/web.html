@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>SENTRY — Target App</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  :root{
+    --void:#0a0e13;
+    --panel:#111820;
+    --panel-2:#161f29;
+    --line:#22303e;
+    --text:#dbe4ee;
+    --text-dim:#7c8a9a;
+    --accent:#5eead4;
+    --accent-dim:#0f3d38;
+    --crit:#fb7185;
+    --crit-dim:#3a1420;
+    --warn:#fbbf24;
+    --safe:#34d399;
+    --safe-dim:#0e3327;
+    --mono:'IBM Plex Mono', ui-monospace, monospace;
+    --sans:'IBM Plex Sans', system-ui, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(ellipse 900px 500px at 50% -10%, rgba(94,234,212,0.07), transparent),
+      var(--void);
+    color:var(--text);
+    font-family:var(--sans);
+    min-height:100vh;
+  }
+  a{color:var(--accent); text-decoration:none;}
+
+  /* ---------- top bar ---------- */
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 28px;
+    border-bottom:1px solid var(--line);
+    background:rgba(10,14,19,0.85);
+    backdrop-filter:blur(6px);
+    position:sticky; top:0; z-index:10;
+  }
+  .brand{ display:flex; align-items:center; gap:10px; font-family:var(--mono); }
+  .brand-mark{
+    width:10px; height:10px; border-radius:2px;
+    background:var(--accent);
+    box-shadow:0 0 10px var(--accent);
+  }
+  .brand-name{ font-weight:700; letter-spacing:0.02em; }
+  .brand-sub{ color:var(--text-dim); font-size:13px; }
+  .nav-links{ display:flex; gap:18px; font-family:var(--mono); font-size:13px; }
+  .nav-links span{ color:var(--text-dim); }
+  .nav-links a:hover{ text-decoration:underline; }
+
+  /* ---------- protection strip ---------- */
+  .shield-strip{
+    display:flex; align-items:center; gap:10px;
+    max-width:1040px; margin:20px auto 0; padding:10px 16px;
+    background:var(--safe-dim); border:1px solid rgba(52,211,153,0.35);
+    border-radius:8px; font-family:var(--mono); font-size:12.5px; color:var(--safe);
+  }
+  .pulse{
+    width:7px; height:7px; border-radius:50%; background:var(--safe);
+    box-shadow:0 0 0 0 rgba(52,211,153,0.6);
+    animation:pulse 2s infinite;
+  }
+  @keyframes pulse{
+    0%{ box-shadow:0 0 0 0 rgba(52,211,153,0.5); }
+    70%{ box-shadow:0 0 0 8px rgba(52,211,153,0); }
+    100%{ box-shadow:0 0 0 0 rgba(52,211,153,0); }
+  }
+
+  /* ---------- hero ---------- */
+  .hero{
+    max-width:1040px; margin:0 auto; padding:36px 16px 8px;
+  }
+  .hero h1{
+    font-size:30px; margin:0 0 6px; font-weight:700; letter-spacing:-0.01em;
+  }
+  .hero p{ color:var(--text-dim); margin:0; max-width:560px; font-size:14.5px; line-height:1.6; }
+
+  /* ---------- layout ---------- */
+  .container{ max-width:1040px; margin:0 auto; padding:20px 16px 60px; }
+  .grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  @media (max-width:760px){ .grid{ grid-template-columns:1fr; } }
+
+  .card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:20px;
+    margin-bottom:16px;
+  }
+  .card h2{
+    font-size:13px; text-transform:uppercase; letter-spacing:0.06em;
+    color:var(--text-dim); margin:0 0 14px; font-weight:600;
+    display:flex; align-items:center; gap:8px;
+  }
+  .card h2 .dot{ width:6px; height:6px; border-radius:50%; background:var(--accent); }
+
+  input{
+    width:100%; padding:10px 12px; margin-bottom:8px;
+    border-radius:6px; border:1px solid var(--line);
+    background:var(--void); color:var(--text);
+    font-family:var(--mono); font-size:13.5px;
+  }
+  input:focus{ outline:none; border-color:var(--accent); }
+  input::placeholder{ color:var(--text-dim); }
+
+  button{
+    padding:9px 16px; border-radius:6px; border:1px solid transparent;
+    background:var(--accent); color:#04201c;
+    font-family:var(--mono); font-weight:600; font-size:13px;
+    cursor:pointer; transition:opacity .15s;
+  }
+  button:hover{ opacity:0.85; }
+
+  .result{ margin-top:12px; padding:12px; border-radius:8px; font-family:var(--mono); font-size:13px; }
+  .success{ background:var(--safe-dim); border:1px solid rgba(52,211,153,.35); color:var(--safe); }
+  .fail{ background:rgba(251,191,36,0.08); border:1px solid rgba(251,191,36,.35); color:var(--warn); }
+  .blocked{ background:var(--crit-dim); border:1px solid rgba(251,113,133,.4); color:var(--crit); }
+
+  .badge{ padding:3px 9px; border-radius:5px; font-size:11px; font-family:var(--mono); font-weight:600; }
+  .block{ background:var(--crit-dim); color:var(--crit); border:1px solid rgba(251,113,133,.35); }
+  .allow{ background:var(--safe-dim); color:var(--safe); border:1px solid rgba(52,211,153,.35); }
+
+  pre{
+    background:var(--void); padding:10px; border-radius:6px;
+    color:var(--text); border:1px solid var(--line);
+    font-family:var(--mono); font-size:12.5px; overflow-x:auto; margin:0;
+  }
+
+  .full{ grid-column:1 / -1; }
+  canvas{ max-height:220px; }
+
+  table{ width:100%; border-collapse:collapse; font-family:var(--mono); font-size:12.5px; }
+  th,td{ padding:9px 8px; border-bottom:1px solid var(--line); text-align:left; }
+  th{ color:var(--text-dim); font-weight:500; text-transform:uppercase; font-size:11px; letter-spacing:0.04em; }
+  #logTable tr:hover{ background:var(--panel-2); }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-mark"></div>
+    <span class="brand-name">SENTRY</span>
+    <span class="brand-sub">/ target-app</span>
+  </div>
+  <div class="nav-links">
+    <a href="http://localhost:5110/demo">Detection Engine</a>
+    <span>·</span>
+    <a href="http://localhost:5210">SOC Monitor</a>
+  </div>
+</div>
+
+<div class="shield-strip">
+  <span class="pulse"></span>
+  Protected by AI WAF — mọi request đi qua tầng phát hiện trước khi chạm MySQL
+</div>
+
+<div class="hero">
+  <h1>Target Application</h1>
+  <p>Ứng dụng demo có chủ đích chứa lỗ hổng SQL Injection cổ điển, dùng để kiểm chứng khả năng phát hiện &amp; chặn của WAF phía sau.</p>
+</div>
+
+<div class="container">
+
+  <div class="grid">
+    <div class="card">
+      <h2><span class="dot"></span>Register</h2>
+      <input id="reg_user" placeholder="username">
+      <input id="reg_pass" placeholder="password" type="password">
+      <button onclick="register()">Create account</button>
+      <div id="regResult"></div>
+    </div>
+
+    <div class="card">
+      <h2><span class="dot"></span>Authenticate</h2>
+      <input id="user" placeholder="username">
+      <input id="pass" placeholder="password" type="password">
+      <button onclick="login()">Sign in</button>
+      <div id="loginResult"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="dot"></span>Query simulation</h2>
+    <input id="search" placeholder="tìm theo username, hoặc thử payload SQLi...">
+    <button onclick="doSearch()">Execute</button>
+    <div id="searchResult"></div>
+  </div>
+
+  <div class="card">
+    <h2><span class="dot"></span>Threat analytics</h2>
+    <canvas id="chart"></canvas>
+    <div id="stats" style="margin-top:14px; font-family:var(--mono); font-size:13px; color:var(--text-dim);"></div>
+  </div>
+
+  <div class="card">
+    <h2><span class="dot"></span>Attack log</h2>
+    <table>
+      <thead><tr><th>Time</th><th>Status</th><th>Query</th></tr></thead>
+      <tbody id="logTable"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+function renderResult(data, id) {
+    let cls = "success";
+    if (data.status === "BLOCKED") cls = "blocked";
+    else if (data.status === "FAIL") cls = "fail";
+    let html = `<div class="result ${cls}">`;
+    html += `<b>Status:</b> ${data.status}<br>`;
+    if (data.query) html += `<pre>${highlight(data.query)}</pre>`;
+    html += "</div>";
+    document.getElementById(id).innerHTML = html;
+}
+
+function highlight(q) {
+    return q.replace(/(SELECT|UNION|OR|AND|DROP|SLEEP)/gi,
+        '<span style="color:#fb7185">$1</span>');
+}
+
+async function register() {
+    let form = new FormData();
+    form.append("username", document.getElementById("reg_user").value);
+    form.append("password", document.getElementById("reg_pass").value);
+    let res = await fetch("/register", { method: "POST", body: form });
+    renderResult(await res.json(), "regResult");
+}
+
+async function login() {
+    let form = new FormData();
+    form.append("username", document.getElementById("user").value);
+    form.append("password", document.getElementById("pass").value);
+    let res = await fetch("/login", { method: "POST", body: form });
+    renderResult(await res.json(), "loginResult");
+}
+
+async function doSearch() {
+    let q = document.getElementById("search").value;
+    let res = await fetch(`/search?q=${encodeURIComponent(q)}`);
+    renderResult(await res.json(), "searchResult");
+}
+
+let chart;
+
+async function loadSOC() {
+    try {
+        const statsRes = await fetch("/soc/stats");
+        const stats = await statsRes.json();
+
+        document.getElementById("stats").innerText =
+            `total ${stats.total}  ·  blocked ${stats.blocked}  ·  allowed ${stats.allowed}`;
+
+        drawChart(stats.blocked, stats.allowed);
+
+        const alertRes = await fetch("/soc/alerts");
+        const alerts = await alertRes.json();
+        renderTable(alerts.items || []);
+    } catch (err) {
+        console.log("SOC error", err);
+    }
+}
+
+function drawChart(b, a) {
+    if (chart) chart.destroy();
+    chart = new Chart(document.getElementById("chart"), {
+        type: "doughnut",
+        data: {
+            labels: ["Blocked", "Allowed"],
+            datasets: [{ data: [b, a], backgroundColor: ["#fb7185", "#34d399"], borderWidth:0 }]
+        },
+        options: {
+            plugins: { legend: { labels: { color: "#dbe4ee", font: { family: "IBM Plex Mono", size: 12 } } } }
+        }
+    });
+}
+
+function renderTable(data) {
+    let html = "";
+    data.slice(0, 10).forEach(x => {
+        html += `<tr>
+            <td>${x.ts || ""}</td>
+            <td><span class="badge ${x.decision === 'BLOCK' ? 'block' : 'allow'}">${x.decision}</span></td>
+            <td>${highlight(x.query || "")}</td>
+        </tr>`;
+    });
+    document.getElementById("logTable").innerHTML = html;
+}
+
+loadSOC();
+//setInterval(loadSOC, 2000);
+</script>
+</body>
+</html>

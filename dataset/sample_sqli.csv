@@ -1,0 +1,5 @@
+query,label
+"SELECT * FROM users","benign"
+"'; DROP TABLE users; --","sqli"
+"SELECT id FROM products WHERE id=1","benign"
+"1 OR 1=1","sqli"

@@ -1,0 +1,88 @@
+query,label
+UPDATE accounts SET id='bob' WHERE id=129,benign
+"INSERT INTO accounts (price, name) VALUES ('y', 'y')",benign
+UPDATE sessions SET address='a@b.com' WHERE id=110,benign
+"INSERT INTO users (address, username) VALUES ('y', 'z')",benign
+SELECT * FROM orders WHERE user_id=10 ORDER BY created_at DESC LIMIT 10,benign
+SELECT email FROM sessions WHERE address='alice',benign
+"' UNION SELECT username, password FROM comments --",sqli
+INSERT INTO sessions (password) VALUES ('z'),benign
+SELECT * FROM orders WHERE user_id=15 ORDER BY created_at DESC LIMIT 10,benign
+UPDATE orders SET price='test' WHERE id=32,benign
+DELETE FROM products WHERE created_at < '2023-01-08',benign
+"SELECT price, username FROM products WHERE name='bob'",benign
+DELETE FROM accounts WHERE created_at < '2023-10-24',benign
+"""; DROP TABLE accounts; --",sqli
+SELECT * FROM orders WHERE user_id=8 ORDER BY created_at DESC LIMIT 10,benign
+"INSERT INTO orders (id, username, password) VALUES ('1', 'x', 'y')",benign
+SELECT COUNT(*) FROM sessions WHERE status='pending',benign
+SELECT * FROM orders WHERE user_id=20 ORDER BY created_at DESC LIMIT 10,benign
+SELECT * FROM users WHERE id=101,benign
+"' UNION SELECT name, price FROM comments --",sqli
+SELECT price FROM products WHERE sku='SKU2295',benign
+SELECT price FROM products WHERE sku='SKU1647',benign
+SELECT * FROM comments WHERE id=34,benign
+SELECT price FROM products WHERE sku='SKU8889',benign
+UPDATE products SET id='test' WHERE id=152,benign
+' UNION SELECT price FROM users --,sqli
+"' UNION SELECT email, status FROM accounts --",sqli
+SELECT * FROM orders WHERE user_id=18 ORDER BY created_at DESC LIMIT 10,benign
+UPDATE sessions SET name='admin' WHERE id=21,benign
+DELETE FROM accounts WHERE created_at < '2023-10-21',benign
+"SELECT address, price FROM users WHERE price='bob'",benign
+SELECT * FROM comments WHERE id=185,benign
+"' UNION SELECT password, status FROM orders --",sqli
+INSERT INTO orders (status) VALUES ('2'),benign
+SELECT price FROM products WHERE sku='SKU5982',benign
+SELECT * FROM orders WHERE id=184,benign
+SELECT name FROM sessions WHERE id='test',benign
+"INSERT INTO comments (name, price) VALUES ('1', '1')",benign
+SELECT * FROM orders WHERE user_id=106 ORDER BY created_at DESC LIMIT 10,benign
+DELETE FROM products WHERE created_at < '2023-11-14',benign
+DELETE FROM sessions WHERE created_at < '2023-03-12',benign
+SELECT * FROM accounts WHERE id=59,benign
+SELECT price FROM products WHERE sku='SKU3860',benign
+DELETE FROM products WHERE created_at < '2023-03-17',benign
+"SELECT price, address FROM products WHERE status='alice'",benign
+"INSERT INTO accounts (price, email) VALUES ('z', 'y')",benign
+DELETE FROM products WHERE created_at < '2023-06-13',benign
+UPDATE orders SET username='john' WHERE id=163,benign
+SELECT * FROM orders WHERE user_id=177 ORDER BY created_at DESC LIMIT 10,benign
+"' UNION SELECT email, username FROM accounts --",sqli
+"SELECT address, name, id FROM sessions WHERE address='a@b.com'",benign
+SELECT COUNT(*) FROM products WHERE status='pending',benign
+"SELECT status, price FROM products WHERE status='john'",benign
+SELECT id FROM users WHERE name='john',benign
+"SELECT name, password, address FROM sessions WHERE username='bob'",benign
+SELECT price FROM products WHERE sku='SKU3141',benign
+DELETE FROM products WHERE created_at < '2023-03-11',benign
+SELECT * FROM orders WHERE user_id=22 ORDER BY created_at DESC LIMIT 10,benign
+SELECT * FROM orders WHERE user_id=74 ORDER BY created_at DESC LIMIT 10,benign
+INSERT INTO orders (email) VALUES ('1'),benign
+' UNION SELECT price FROM accounts --,sqli
+SELECT price FROM products WHERE sku='SKU7348',benign
+SELECT * FROM orders WHERE user_id=162 ORDER BY created_at DESC LIMIT 10,benign
+"SELECT address, price FROM products WHERE price='alice'",benign
+SELECT price FROM products WHERE sku='SKU7932',benign
+SELECT * FROM orders WHERE user_id=13 ORDER BY created_at DESC LIMIT 10,benign
+SELECT price FROM products WHERE sku='SKU6651',benign
+"INSERT INTO accounts (username, price, address) VALUES ('2', 'y', 'y')",benign
+SELECT * FROM users WHERE id=17,benign
+UPDATE accounts SET price='bob' WHERE id=98,benign
+SELECT price FROM products WHERE sku='SKU5088',benign
+UPDATE orders SET password='test' WHERE id=39,benign
+SELECT price FROM products WHERE sku='SKU2600',benign
+"' UNION SELECT id, username FROM orders --",sqli
+SELECT price FROM products WHERE sku='SKU2922',benign
+"SELECT price, email, password FROM users WHERE price='bob'",benign
+'; DROP TABLE comments; --,sqli
+SELECT * FROM orders WHERE user_id=28 ORDER BY created_at DESC LIMIT 10,benign
+' UNION SELECT status FROM products --,sqli
+SELECT * FROM orders WHERE user_id=56 ORDER BY created_at DESC LIMIT 10,benign
+SELECT * FROM orders WHERE user_id=150 ORDER BY created_at DESC LIMIT 10,benign
+INSERT INTO products (status) VALUES ('2'),benign
+SELECT price FROM products WHERE sku='SKU9702',benign
+SELECT price FROM products WHERE sku='SKU4765',benign
+"INSERT INTO accounts (password, status) VALUES ('z', '1')",benign
+SELECT COUNT(*) FROM users WHERE status='pending',benign
+"INSERT INTO accounts (price, id) VALUES ('2', 'x')",benign
